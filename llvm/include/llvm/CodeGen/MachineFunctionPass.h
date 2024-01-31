@@ -29,7 +29,7 @@ namespace llvm {
 /// override runOnMachineFunction.
 class MachineFunctionPass : public FunctionPass {
 public:
-  bool doInitialization(Module&) override {
+  bool doInitialization(Module &) override {
     // Cache the properties info at module-init time so we don't have to
     // construct them for every function.
     RequiredProperties = getRequiredProperties();
@@ -37,6 +37,7 @@ public:
     ClearedProperties = getClearedProperties();
     return false;
   }
+
 protected:
   explicit MachineFunctionPass(char &ID) : FunctionPass(ID) {}
 
@@ -51,7 +52,7 @@ protected:
   /// For MachineFunctionPasses, calling AU.preservesCFG() indicates that
   /// the pass does not modify the MachineBasicBlock CFG.
   ///
-  void getAnalysisUsage(AnalysisUsage &AU) const override;
+  virtual void getAnalysisUsage(AnalysisUsage &AU) const override;
 
   virtual MachineFunctionProperties getRequiredProperties() const {
     return MachineFunctionProperties();
@@ -75,6 +76,6 @@ private:
   bool runOnFunction(Function &F) override;
 };
 
-} // End llvm namespace
+} // namespace llvm
 
 #endif

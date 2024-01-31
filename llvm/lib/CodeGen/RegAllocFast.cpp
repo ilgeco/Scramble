@@ -23,6 +23,7 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -219,6 +220,7 @@ public:
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     // AU.setPreservesCFG();
+    AU.addRequiredTransitive<MachineDominatorTree>();
     MachineFunctionPass::getAnalysisUsage(AU);
   }
 
@@ -1685,8 +1687,9 @@ bool RegAllocFast::runOnMachineFunction(MachineFunction &MF) {
   if (MF.getName().contains("no_first_half")) {
     llvm::dbgs() << "Before\n";
     MF.dump();
-    SecretMixer::SecretMixer SM(MF);
-    SM.cloneInstruction();
+    auto *DomTree = &getAnalysis<MachineDominatorTree>();
+    SecretMixer::SecretMixer SM(MF, DomTree);
+    SM.cloneInstructions();
     llvm::dbgs() << "After\n";
     MF.dump();
   }

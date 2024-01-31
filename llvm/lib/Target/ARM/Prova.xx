@@ -1,0 +1,60 @@
+//===-- ARMOptimizeBarriersPass - two DMBs without a memory access in between,
+// removed one -===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===------------------------------------------------------------------------------------------===//
+
+#include "/home/ilgeco/opt/llvm-project/llvm/lib/CodeGen/RegAllocFast.cpp"
+#include "ARM.h"
+#include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/LoopInfo.h"
+#include "llvm/CodeGen/MachineFunctionPass.h"
+
+using namespace llvm;
+
+#define DEBUG_TYPE "Disagio 1"
+
+namespace {
+class Disagio : public MachineFunctionPass {
+public:
+  static char ID;
+  Disagio() : MachineFunctionPass(ID) {}
+
+  bool runOnMachineFunction(MachineFunction &Fn) override;
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
+
+  MachineFunctionProperties getRequiredProperties() const override {
+    return MachineFunctionProperties().set(
+        MachineFunctionProperties::Property::NoVRegs);
+  }
+
+  StringRef getPassName() const override { return "Disagio"; }
+};
+char Disagio::ID = 0;
+
+} // namespace
+
+bool Disagio::runOnMachineFunction(MachineFunction &MF) {}
+
+void Disagio::getAnalysisUsage(AnalysisUsage &AU) const {
+
+  AU.addRequired<LoopInfoWrapperPass>();
+  AU.addRequired<RegAllocFast>();
+
+  // MachineFunctionPass preserves all LLVM IR passes, but there's no
+  // high-level way to express this. Instead, just list a bunch of
+  // passes explicitly. This does not include setPreservesCFG,
+  // because CodeGen overloads that to mean preserving the MachineBasicBlock
+  // CFG in addition to the LLVM IR CFG.
+
+  FunctionPass::getAnalysisUsage(AU);
+}
+
+/// createARMOptimizeBarriersPass - Returns an instance of the remove double
+/// barriers
+/// pass.
+FunctionPass *llvm::createARMOptimizeBarriersPass() { return new Disagio(); }
