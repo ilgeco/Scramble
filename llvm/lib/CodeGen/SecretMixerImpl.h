@@ -11,6 +11,7 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <functional>
 #include <initializer_list>
@@ -19,10 +20,10 @@
 #include <utility>
 
 #define GET_REGINFO_ENUM
-#include "/home/ilgeco/opt/llvm-project/build/lib/Target/ARM/ARMGenRegisterInfo.inc"
+#include "/home/ilgeco/opt/llvm-project/dist/lib/Target/ARM/ARMGenRegisterInfo.inc"
 
 #define GET_INSTRINFO_ENUM
-#include "/home/ilgeco/opt/llvm-project/build/lib/Target/ARM/ARMGenInstrInfo.inc"
+#include "/home/ilgeco/opt/llvm-project/dist/lib/Target/ARM/ARMGenInstrInfo.inc"
 
 namespace SecretMixer {
 
@@ -63,8 +64,11 @@ public:
   int getFreeRegister();
   void setOccRegister(int Reg);
   void reset();
-  void updateFreeRegister(const llvm::MachineInstr &MI);
+  void updateFreeRegisterPreIt(const llvm::MachineInstr &MI);
+  void updateFreeRegisterPostIt(const llvm::MachineInstr &MI);
   void dump();
+  // Check if reister is Free
+  bool isFree(int Reg);
 
 private:
   llvm::DenseMap<int, int> RegisterMap;
@@ -87,12 +91,14 @@ private:
   llvm::DenseMap<int, int> FrameIndexRemapper;
   llvm::MachineFunction &MF;
   llvm::MachineDominatorTree *MDT;
+  std::map<std::pair<int, llvm::Align>, int> VoidFrames;
   llvm::DenseMap<
       int, std::function<void(SecretMixerImpl *, const llvm::MachineInstr &,
                               llvm::MachineInstrBuilder &)>>
       CloneOperandsFunctions;
   FreeRegister freeRegisterTracker;
 
+  int getVoidFrame(int Size, llvm::Align Align);
   // Clone the MachineOperand Op appending it to the MI contructed by MIB,
   // if Op is a register it'attemps a remap following the CloneRemapper entries
   void remapOperand(llvm::MachineInstrBuilder &MIB,
@@ -110,12 +116,14 @@ private:
   void
   addConditionToIT(llvm::DenseMap<llvm::MachineBasicBlock *,
                                   std::vector<llvm::MachineInstr *>> &ITinsts,
-                   int RandomIndex, int CarryIndex);
+                   int RandomIndex);
 
   void loadRandom(llvm::MachineBasicBlock *MBB, llvm::MachineInstr *InsPoint,
                   int RandomIndex);
-  void testAndShiftRegister(llvm::MachineBasicBlock *MBB,
-                            llvm::MachineInstr *InsPoint, int RandomIndex);
+
+  auto testAndShiftRegister(llvm::MachineBasicBlock *MBB,
+                            llvm::MachineInstr *InsPoint, int RandomIndex,
+                            int suggestRegister);
   std::pair<int, int> allocateStackSpaceForRandom();
   void recursiveConditionToIt(
       const llvm::DenseMap<llvm::MachineBasicBlock *,

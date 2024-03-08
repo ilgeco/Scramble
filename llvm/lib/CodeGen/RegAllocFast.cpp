@@ -67,9 +67,8 @@ static cl::opt<bool> IgnoreMissingDefs("rafast-ignore-missing-defs",
                                        cl::Hidden);
 
 static cl::opt<std::string>
-    FileRegisterPath("fileDiscardRegister",
-                     cl::desc("Specifiy the removed register"),
-                     cl::init("./regi"));
+    ScrambleName("scrambleName", cl::desc("Name of the function to scramble"),
+                 cl::init(""));
 static RegisterRegAlloc fastRegAlloc("fast", "fast register allocator",
                                      createFastRegisterAllocator);
 
@@ -1628,17 +1627,9 @@ void RegAllocFast::allocateBasicBlock(MachineBasicBlock &MBB) {
 
 static std::vector<int> FileDiscardedRegister;
 
-const std::vector<int> &getDiscardRegister() {
+const std::vector<int> getDiscardRegister() {
 
-  if (FileRegisterPath == "" || FileDiscardedRegister.size() != 0)
-    return FileDiscardedRegister;
-
-  std::fstream File(FileRegisterPath, std::ios_base::in);
-  auto EndIter = std::istream_iterator<int>();
-  auto BeginIter = std::istream_iterator<int>(File);
-  FileDiscardedRegister.insert(FileDiscardedRegister.end(), BeginIter, EndIter);
-  File.close();
-  return FileDiscardedRegister;
+  return {76, 77, 78, 79, 80, 81, 82, 83, 84, 13};
 }
 
 bool RegAllocFast::runOnMachineFunction(MachineFunction &MF) {
@@ -1652,7 +1643,7 @@ bool RegAllocFast::runOnMachineFunction(MachineFunction &MF) {
   // check if function has half of the avaible register
 
   MRI->freezeReservedRegs(MF);
-  if (MF.getName().contains("no_first_half")) {
+  if (ScrambleName != "" && MF.getName().contains(ScrambleName)) {
     for (auto Reg : getDiscardRegister()) {
       MRI->reserveReg(Reg, TRI);
     }
@@ -1684,7 +1675,7 @@ bool RegAllocFast::runOnMachineFunction(MachineFunction &MF) {
 
   StackSlotForVirtReg.clear();
 
-  if (MF.getName().contains("no_first_half")) {
+  if (ScrambleName != "" && MF.getName().contains(ScrambleName)) {
     llvm::dbgs() << "Before\n";
     MF.dump();
     auto *DomTree = &getAnalysis<MachineDominatorTree>();
