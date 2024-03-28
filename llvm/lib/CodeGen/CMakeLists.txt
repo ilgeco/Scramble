@@ -193,6 +193,7 @@ add_llvm_component_library(LLVMCodeGen
   RegAllocEvictionAdvisor.cpp
   RegAllocFast.cpp
   SecretMixer.cpp
+  RegisterEnum.cpp
   SecretMixerImpl.cpp
   RegAllocGreedy.cpp
   RegAllocPBQP.cpp

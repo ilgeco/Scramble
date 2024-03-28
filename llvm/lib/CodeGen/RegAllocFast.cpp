@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "RegisterEnum.h"
 #include "SecretMixer.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
@@ -1627,9 +1628,13 @@ void RegAllocFast::allocateBasicBlock(MachineBasicBlock &MBB) {
 
 static std::vector<int> FileDiscardedRegister;
 
-const std::vector<int> getDiscardRegister() {
+const std::vector<unsigned int> getDiscardRegister() {
+  utils::scrambleRegister();
 
-  return {76, 77, 78, 79, 80, 81, 82, 83, 84, 13};
+  return {utils::MR[utils::R3],  utils::MR[utils::R4], utils::MR[utils::R5],
+          utils::MR[utils::R6],  utils::MR[utils::R7], utils::MR[utils::R8],
+          utils::MR[utils::R8],  utils::MR[utils::R9], utils::MR[utils::R10],
+          utils::MR[utils::R11], utils::MR[utils::LR]};
 }
 
 bool RegAllocFast::runOnMachineFunction(MachineFunction &MF) {

@@ -1,4 +1,5 @@
 #include "SecretMixerImpl.h"
+#include "RegisterEnum.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
@@ -479,21 +480,21 @@ SecretMixerImpl::SecretMixerImpl(llvm::MachineFunction &MF,
 
   // Set CPSR to noregister
   CloneRemapper[llvm::ARM::CPSR] = llvm::ARM::NoRegister;
-  CloneRemapper[llvm::ARM::R0] = llvm::ARM::R3;
-  CloneRemapper[llvm::ARM::R1] = llvm::ARM::R4;
-  CloneRemapper[llvm::ARM::R2] = llvm::ARM::R5;
-  CloneRemapper[llvm::ARM::R6] = llvm::ARM::R9;
-  CloneRemapper[llvm::ARM::R7] = llvm::ARM::R10;
-  CloneRemapper[llvm::ARM::R8] = llvm::ARM::R11;
-  CloneRemapper[llvm::ARM::R12] = llvm::ARM::LR;
+  CloneRemapper[utils::MR[utils::R0]] = utils::MR[utils::R3];
+  CloneRemapper[utils::MR[utils::R1]] = utils::MR[utils::R4];
+  CloneRemapper[utils::MR[utils::R2]] = utils::MR[utils::R5];
+  CloneRemapper[utils::MR[utils::R6]] = utils::MR[utils::R9];
+  CloneRemapper[utils::MR[utils::R7]] = utils::MR[utils::R10];
+  CloneRemapper[utils::MR[utils::R8]] = utils::MR[utils::R11];
+  CloneRemapper[utils::MR[utils::R12]] = utils::MR[utils::LR];
 
   // LineRemapper
-  SameLineRemapper[llvm::ARM::R0] = llvm::ARM::R6;
-  SameLineRemapper[llvm::ARM::R6] = llvm::ARM::R0;
-  SameLineRemapper[llvm::ARM::R1] = llvm::ARM::R7;
-  SameLineRemapper[llvm::ARM::R7] = llvm::ARM::R1;
-  SameLineRemapper[llvm::ARM::R2] = llvm::ARM::R8;
-  SameLineRemapper[llvm::ARM::R8] = llvm::ARM::R2;
+  SameLineRemapper[utils::MR[utils::R0]] = utils::MR[utils::R6];
+  SameLineRemapper[utils::MR[utils::R6]] = utils::MR[utils::R0];
+  SameLineRemapper[utils::MR[utils::R1]] = utils::MR[utils::R7];
+  SameLineRemapper[utils::MR[utils::R7]] = utils::MR[utils::R1];
+  SameLineRemapper[utils::MR[utils::R2]] = utils::MR[utils::R8];
+  SameLineRemapper[utils::MR[utils::R8]] = utils::MR[utils::R2];
 
   // CloneOperandsFunctions
   CloneOperandsFunctions[649] = &SecretMixerImpl::moveccOperandAssign;
@@ -509,7 +510,7 @@ SecretMixerImpl::SecretMixerImpl(llvm::MachineFunction &MF,
 
   freeRegisterTracker.setRegisterMap(SameLineRemapper);
   freeRegisterTracker.setInitRegister(
-      {llvm::ARM::R0, llvm::ARM::R1, llvm::ARM::R2});
+      {utils::MR[utils::R0], utils::MR[utils::R1], utils::MR[utils::R2]});
   freeRegisterTracker.reset();
 
   // Allocate more local variable in the stack
@@ -576,7 +577,9 @@ SecretMixerImpl::SecretMixerImpl(llvm::MachineFunction &MF,
 void SecretMixerImpl::sameLineRegisterRemap(llvm::MachineBasicBlock &MBB) {
   llvm::DenseSet<int> AlreadyMapped;
   for (auto &MI : MBB) {
-    constexpr std::array<int, 10> P = {75, 74, 73, 85, 3};
+    std::vector<unsigned int> P = {utils::MR[utils::R0], utils::MR[utils::R1],
+                                   utils::MR[utils::R2], utils::MR[utils::R12],
+                                   llvm::ARM::CPSR,      llvm::ARM::NoRegister};
     for (auto &OP : MI.operands()) {
       if (!OP.isReg())
         continue;
