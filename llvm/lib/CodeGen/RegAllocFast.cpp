@@ -1629,7 +1629,7 @@ void RegAllocFast::allocateBasicBlock(MachineBasicBlock &MBB) {
 static std::vector<int> FileDiscardedRegister;
 
 const std::vector<unsigned int> getDiscardRegister() {
-  utils::scrambleRegister();
+  // utils::scrambleRegister();
 
   return {utils::MR[utils::R3],  utils::MR[utils::R4], utils::MR[utils::R5],
           utils::MR[utils::R6],  utils::MR[utils::R7], utils::MR[utils::R8],
