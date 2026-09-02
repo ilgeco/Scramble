@@ -1,4 +1,4 @@
-# LLVM SecretMixer
+# LLVM Scramble
 
 This repository is an experimental LLVM fork with an ARM/Thumb-2 instruction
 scrambler integrated into LLVM's fast register allocator. It explores changing
